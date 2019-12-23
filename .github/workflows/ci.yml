@@ -1,0 +1,57 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "12.x"
+      - run: npm install
+
+      - name: Test
+        run: npm run test:unit
+
+      - name: Build
+        env:
+          APP_VERSION: ${{ secrets.VERSION }}
+        run: VUE_APP_VERSION=$APP_VERSION npm run build
+        
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: dist
+
+      - name: Copy file via ssh
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          rm: true
+          strip_components: 1
+          source: "dist"
+          target: "/www/deploy-cache"
+
+      - name: Executing remote ssh commands
+        uses: appleboy/ssh-action@master
+        env:
+          APP_VERSION: ${{ secrets.VERSION }}
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          envs: GITHUB_SHA, APP_VERSION
+          script: |
+            cd /www
+            cp -a deploy-cache/ releases/$GITHUB_SHA
+            rm -f current
+            ln -s releases/$GITHUB_SHA current
+            cd releases && ls -t | tail -n +11 | xargs rm -rf
+            echo "🍺 Done $GITHUB_SHA $APP_VERSION"
+            echo "🧨 should reload webserver"
