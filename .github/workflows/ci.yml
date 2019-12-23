@@ -27,16 +27,14 @@ jobs:
           BRANCH: gh-pages
           FOLDER: dist
 
-      - name: Copy file via ssh
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          rm: true
-          strip_components: 1
-          source: "dist"
-          target: "/www/deploy-cache"
+      - name: Copy via rsync
+        uses: easingthemes/ssh-deploy@v2
+        env:
+          REMOTE_HOST: ${{ secrets.HOST }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          SSH_PRIVATE_KEY: ${{ secrets.KEY }}
+          SOURCE: "dist/"
+          TARGET: ${{ secrets.REMOTE_TARGET }}
 
       - name: Executing remote ssh commands
         uses: appleboy/ssh-action@master
