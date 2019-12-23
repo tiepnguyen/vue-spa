@@ -28,7 +28,7 @@ jobs:
           FOLDER: dist
 
       - name: Copy via rsync
-        uses: easingthemes/ssh-deploy@v2
+        uses: easingthemes/ssh-deploy@master
         env:
           REMOTE_HOST: ${{ secrets.HOST }}
           REMOTE_USER: ${{ secrets.USERNAME }}
