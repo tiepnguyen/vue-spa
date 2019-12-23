@@ -33,8 +33,6 @@ jobs:
 
       - name: Executing remote ssh commands
         uses: appleboy/ssh-action@master
-        env:
-          COMMIT_ID: ${{GITHUB_SHA:0:8}}
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
