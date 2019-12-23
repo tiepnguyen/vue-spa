@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: "12.x"
+          node-version: '12.x'
       - run: npm install
 
       - name: Test
@@ -27,6 +27,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           rm: true
+          strip_components: 1
           source: dist
           target: /www/deploy-cache
 
@@ -34,20 +35,22 @@ jobs:
         uses: appleboy/ssh-action@master
         env:
           APP_VERSION: ${{ secrets.VERSION }}
+          COMMIT_ID: ${GITHUB_SHA:0:8}
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          envs: GITHUB_SHA, APP_VERSION
+          envs: GITHUB_SHA, APP_VERSION, COMMIT_ID
           script: |
+            echo ${GITHUB_SHA:0:8}
             cd /www
             cp -a deploy-cache/ releases/$GITHUB_SHA
             rm -f current
             ln -s releases/$GITHUB_SHA current
             cd releases && ls -t | tail -n +11 | xargs rm -rf
-            echo "🍺 Done $GITHUB_SHA $APP_VERSION"
+            echo "🍺 Done $GITHUB_SHA $APP_VERSION $COMMIT_ID"
             echo "🧨 should reload webserver"
-            
+
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v2
         env:
