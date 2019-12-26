@@ -9,11 +9,9 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: '12.x'
+          node-version: 12.x
       - run: npm install
-
-      - name: Test
-        run: npm run test:unit
+      - run: npm test
 
       - name: Build
         env:
@@ -39,19 +37,16 @@ jobs:
           key: ${{ secrets.KEY }}
           envs: GITHUB_SHA
           script: |
-            export SHA=${GITHUB_SHA:0:8}
+            export SHA=${GITHUB_SHA::8}
             cd /www
             cp -a deploy-cache/ releases/$SHA
-            rm -f current
-            ln -s releases/$SHA current
+            rm -f current && ln -s releases/$SHA current
             cd releases && ls -t | tail -n +11 | xargs rm -rf
-            echo "🍺 Done $SHA $COMMIT_ID"
-            echo "🧨 should reload webserver"
+            echo "🍺 Release success $SHA"
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v2
         env:
-          ACTIONS_DEPLOY_KEY: ${{ secrets.ACTIONS_DEPLOY_KEY }}
-          # PERSONAL_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          PERSONAL_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           PUBLISH_BRANCH: gh-pages
           PUBLISH_DIR: ./dist
